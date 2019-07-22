@@ -5,16 +5,16 @@ metadata:
     description: The web server's HTTP port.
   creationTimestamp: null
   labels:
-    application: wsao-datagrid
+    application: ddash-datagrid
     template: datagrid73-basic
-  name: wsao-datagrid
+  name: ddash-datagrid
 spec:
   ports:
   - port: 8080
     protocol: TCP
     targetPort: 8080
   selector:
-    deploymentConfig: wsao-datagrid
+    deploymentConfig: ddash-datagrid
   sessionAffinity: None
   type: ClusterIP
 status:

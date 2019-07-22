@@ -17,10 +17,9 @@ spec:
   resources: {}
   runPolicy: Serial
   source:
-    contextDir: /game-room
     git:
       ref: develop
-      uri: https://github.com/cnad-io/wsao-1-back.git
+      uri: https://github.com/cnad-io/ddash-backend-game-room.git
     type: Git
   strategy:
     sourceStrategy:

@@ -12,7 +12,7 @@ var events = require('../models/events');
 
 
 const DATAGRID_PORT = process.env.DATAGRID_PORT || 11333;
-const DATAGRID_HOST = process.env.DATAGRID_HOST || 'wsao-datagrid-hotrod';
+const DATAGRID_HOST = process.env.DATAGRID_HOST || 'ddash-datagrid-hotrod';
 const DATAGRID_CACHE_NAME = process.env.DATAGRID_CACHE_NAME || 'game-room';
 const DATAGRID_PROTO_VERSION =  process.env.DATAGRID_PROTO_VERSION || '2.5';
 

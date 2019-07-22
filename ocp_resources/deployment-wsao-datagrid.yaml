@@ -4,14 +4,14 @@ metadata:
   creationTimestamp: null
   generation: 1
   labels:
-    application: wsao-datagrid
+    application: ddash-datagrid
     template: datagrid73-basic
-  name: wsao-datagrid
+  name: ddash-datagrid
 spec:
   replicas: 3
   revisionHistoryLimit: 10
   selector:
-    deploymentConfig: wsao-datagrid
+    deploymentConfig: ddash-datagrid
   strategy:
     activeDeadlineSeconds: 21600
     recreateParams:
@@ -22,9 +22,9 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        application: wsao-datagrid
-        deploymentConfig: wsao-datagrid
-      name: wsao-datagrid
+        application: ddash-datagrid
+        deploymentConfig: ddash-datagrid
+      name: ddash-datagrid
     spec:
       containers:
       - env:
@@ -39,7 +39,7 @@ spec:
         - name: JGROUPS_PING_PROTOCOL
           value: openshift.DNS_PING
         - name: OPENSHIFT_DNS_PING_SERVICE_NAME
-          value: wsao-datagrid-ping
+          value: ddash-datagrid-ping
         - name: OPENSHIFT_DNS_PING_SERVICE_PORT
           value: "8888"
         - name: INFINISPAN_CONNECTORS
@@ -49,7 +49,7 @@ spec:
         - name: DATAVIRT_CACHE_NAMES
         - name: CACHE_TYPE_DEFAULT
         - name: HOTROD_SERVICE_NAME
-          value: wsao-datagrid-hotrod
+          value: ddash-datagrid-hotrod
         - name: MEMCACHED_CACHE
           value: default_memcached
         - name: REST_SECURITY_DOMAIN
@@ -68,7 +68,7 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
-        name: wsao-datagrid
+        name: ddash-datagrid
         ports:
         - containerPort: 8778
           name: jolokia
@@ -113,7 +113,7 @@ spec:
   - imageChangeParams:
       automatic: true
       containerNames:
-      - wsao-datagrid
+      - ddash-datagrid
       from:
         kind: ImageStreamTag
         name: jboss-datagrid73-openshift:1.0

@@ -29,8 +29,7 @@ spec:
         deploymentconfig: game-room
     spec:
       containers:
-      - image: docker-registry.default.svc:5000/wsao/game-room
-        imagePullPolicy: Always
+      - imagePullPolicy: Always
         name: game-room
         ports:
         - containerPort: 8080
@@ -54,6 +53,5 @@ spec:
       from:
         kind: ImageStreamTag
         name: game-room:latest
-        namespace: wsao
     type: ImageChange
   - type: ConfigChange

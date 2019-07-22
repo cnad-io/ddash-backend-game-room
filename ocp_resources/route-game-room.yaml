@@ -8,7 +8,6 @@ metadata:
     app: game-room
   name: game-room
 spec:
-  host: game-room-wsao.apps.cnad.io
   port:
     targetPort: 8080-tcp
   to:
