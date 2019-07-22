@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    description: Memcached service for clustered applications.
+  creationTimestamp: null
+  labels:
+    application: wsao-datagrid
+    template: datagrid73-basic
+  name: wsao-datagrid-memcached
+spec:
+  ports:
+  - port: 11211
+    protocol: TCP
+    targetPort: 11211
+  selector:
+    deploymentConfig: wsao-datagrid
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

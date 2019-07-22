@@ -1,0 +1,20 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftWebConsole
+    openshift.io/host.generated: "true"
+  labels:
+    app: game-room
+  name: game-room
+spec:
+  host: game-room-wsao.apps.cnad.io
+  port:
+    targetPort: 8080-tcp
+  to:
+    kind: Service
+    name: game-room
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress: null
