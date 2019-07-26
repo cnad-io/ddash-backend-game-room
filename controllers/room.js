@@ -64,9 +64,8 @@ var onJoinGameRoom = function (data) {
         connected.then(function (client) {
             logger.info("connected to datagrid");
             logger.debug("RoomId requested", data.roomId)
-            var getRoomStatus = client.get(data.roomId + "_room");
-
-            var roomValidation = getRoomStatus.then(function (value) {
+            client.get(data.roomId + "_room")
+            .then(function (value) {
               logger.debug("room: ", value);
               if(value == 'initiated'){
                 registerPlayer(data);
@@ -76,7 +75,6 @@ var onJoinGameRoom = function (data) {
                 reject({info: "room " + data.roomId + " doesn't exist"})
               }
             });
-
           }).catch(function(error) {
             logger.error("Got error:", error);
           });

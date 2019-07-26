@@ -36,16 +36,17 @@ io.adapter(redis({
 io.on('connection', function (socket) {
   socket.on(events.public.in.join, function (data) {
     //Este ID debe salir de algun lado
-    data.playerId=socket.id;
-    roomController.on.joinGameRoom(data).then( function (response){
-        socket.join(data.roomId);
-        socket.emit(events.public.out.news, {
-          info: "welcome wsao game room"
-        });
-      }
-    ).catch(function (error) {
-      socket.emit(events.public.out.news, error);
+    //data.playerId=socket.id;
+    //roomController.on.joinGameRoom(data).then( function (response){
+    socket.join(data.roomId);
+    socket.emit(events.public.out.news, {
+      info: "Sala creada, se envía game ready" + data.roomId
     });
+    //   }
+    // ).catch(function (error) {
+    //   socket.emit(events.public.out.news, error);
+    // });
+    io.to(data.roomId).emit(events.public.out.game_ready, data.playerList);
   });
   socket.on(events.public.in.player_moved, function (data) {
     var playerMovedInput = data
