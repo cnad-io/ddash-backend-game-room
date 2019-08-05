@@ -1,0 +1,129 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  creationTimestamp: null
+  generation: 1
+  labels:
+    application: ddash-datagrid
+    template: datagrid73-basic
+  name: ddash-datagrid
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    deploymentConfig: ddash-datagrid
+  strategy:
+    activeDeadlineSeconds: 21600
+    recreateParams:
+      timeoutSeconds: 600
+    resources: {}
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        application: ddash-datagrid
+        deploymentConfig: ddash-datagrid
+      name: ddash-datagrid
+    spec:
+      containers:
+      - env:
+        - name: USERNAME
+          value: admin
+        - name: PASSWORD
+          value: RH@wsao1
+        - name: ADMIN_GROUP
+        - name: HOTROD_AUTHENTICATION
+        - name: CONTAINER_SECURITY_ROLE_MAPPER
+        - name: CONTAINER_SECURITY_ROLES
+        - name: JGROUPS_PING_PROTOCOL
+          value: openshift.DNS_PING
+        - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+          value: ddash-datagrid-ping
+        - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+          value: "8888"
+        - name: INFINISPAN_CONNECTORS
+          value: hotrod,memcached,rest
+        - name: CACHE_NAMES
+          value: game-room
+        - name: DATAVIRT_CACHE_NAMES
+        - name: CACHE_TYPE_DEFAULT
+        - name: HOTROD_SERVICE_NAME
+          value: ddash-datagrid-hotrod
+        - name: MEMCACHED_CACHE
+          value: default_memcached
+        - name: REST_SECURITY_DOMAIN
+        - name: JGROUPS_CLUSTER_PASSWORD
+          value: LMQUdjAq
+        image: docker-registry.default.svc:5000/openshift/jboss-datagrid73-openshift@sha256:0a3a55052f6e8df1ea48de0c429c39e072b6aa8818250ccee634f96acacfd7c7
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - /opt/datagrid/bin/livenessProbe.sh
+          failureThreshold: 3
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: ddash-datagrid
+        ports:
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8888
+          name: ping
+          protocol: TCP
+        - containerPort: 11211
+          name: memcached
+          protocol: TCP
+        - containerPort: 11222
+          name: hotrod-internal
+          protocol: TCP
+        - containerPort: 11333
+          name: hotrod
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - /opt/datagrid/bin/readinessProbe.sh
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+  test: false
+  triggers:
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - ddash-datagrid
+      from:
+        kind: ImageStreamTag
+        name: jboss-datagrid73-openshift:1.0
+        namespace: openshift
+    type: ImageChange
+  - type: ConfigChange
+status:
+  availableReplicas: 0
+  latestVersion: 0
+  observedGeneration: 0
+  replicas: 0
+  unavailableReplicas: 0
+  updatedReplicas: 0
