@@ -1,75 +1,53 @@
 'use strict';
 
-var logger = require('pino')({ 'level': process.env.LOG_LEVEL || 'info' });
+var logger = require('pino')({
+  'level': process.env.LOG_LEVEL || 'info'
+});
+var app = require('http').createServer(function (req, res) {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.write('{ "message": "ok" }');
+    res.end();
+  }
+  if (process.env.MOCK_ROOM_MANAGEMENT) { // eslint-disable-next-line global-require
+    require('./mock/room-management')(req, res);
+  }
+});
 
-var app = require('http').createServer();
-var appint = require('http').createServer();
 var io = require('socket.io')(app);
-var ioint = require('socket.io')(appint);
-var redis = require('socket.io-redis');
 
-var events = require('./models/events');
-var roomController = require('./controllers/room');
+logger.info('Setting accepted origins.');
+io.origins('*:*');
 
-app.listen(8080);
-appint.listen(8081);
+var redisAdapter = require('socket.io-redis');
+var redis = require('redis');
 
-ioint.on('connection', function (socket) {
-  socket.on(events.server.in.createRoom, function (data) {
-        //Al final se crean solas las salas al hacer join
-    roomController.on.createGameRoom(data).then(
-      function(response){
-        socket.emit(events.server.out.new_room, { roomId: response.roomId });
-      }
-    ).catch(function () {
-
-    });
-
+if (process.env.REDIS_ADAPTER_URL) {
+  logger.info('Integrating with Redis.');
+  var pub = redis.createClient(
+    process.env.REDIS_ADAPTER_PORT || 6379,
+    process.env.REDIS_ADAPTER_URL || 'redis-waiting-room', {
+    'auth_pass': process.env.REDIS_ADAPTER_PASS || 'pwd'
   });
-});
-
-io.adapter(redis({
-  host: 'redis-game-room',
-  port: 6379
-}));
-
-io.on('connection', function (socket) {
-  socket.on(events.public.in.join, function (data) {
-    //Este ID debe salir de algun lado
-    //data.playerId=socket.id;
-    //roomController.on.joinGameRoom(data).then( function (response){
-    socket.join(data.roomId);
-    socket.emit(events.public.out.news, {
-      info: "Sala creada, se envía game ready" + data.roomId
-    });
-    //   }
-    // ).catch(function (error) {
-    //   socket.emit(events.public.out.news, error);
-    // });
-    io.to(data.roomId).emit(events.public.out.game_ready, data.playerList);
+  var sub = redis.createClient(
+    process.env.REDIS_ADAPTER_PORT || 6379,
+    process.env.REDIS_ADAPTER_URL || 'redis-waiting-room', {
+    'auth_pass': process.env.REDIS_ADAPTER_PASS || 'pwd'
   });
-  socket.on(events.public.in.player_moved, function (data) {
-    var playerMovedInput = data
-    if (typeof data != 'object') {
-      playerMovedInput = JSON.parse(data);
-    }
-    //process.emit(events.process.sendPlayerMoveToRoom, playerMovedInput);
-    socket.broadcast.to(data.roomId).emit(events.public.out.remote_player_moved, data);
-    roomController.on.playerMove(playerMovedInput);
-  });
+  logger.debug('Redis configuration.', pub, sub);
+  io.adapter(redisAdapter({ pubClient: pub, subClient: sub }));
+}
+
+require('./socket')(io);
+
+var port = process.env.PORT || 8080;
+
+app.listen(port, function () {
+  logger.info('Server started and ready to receive requests');
 });
 
-process.on(events.process.sendNewsToRoom, (roomId,data) => {
-  logger.info("send a message to " + roomId)
-  io.to(roomId).emit(events.public.out.news, data);
-});
-
-process.on(events.process.sendPlayerMoveToRoom, (data) => {
-  logger.info("send a message to " + data.roomId)
-  io.to(data.roomId).emit(events.public.out.remote_player_moved, data);
-});
-
-process.on(events.process.sendGameReadySignal, (data) => {
-  logger.info("send a message to " + data.roomId)
-  io.to(data.roomId).emit(events.public.out.game_ready, data);
-});
+module.exports = {
+  server: app,
+  ws: io
+};

@@ -4,4 +4,4 @@
 # MEMORY_LIMIT=
 APP_NAME=game-room
 REDIS_ADAPTER_URL=redis-game-room
-PIPELINES_NAMESPACE=dino-dush-non-prod
+PIPELINES_NAMESPACE=dino-dash-non-prod

@@ -18,17 +18,6 @@ openshift_cluster_content:
       - base
 - object: build
   content:
-    - name: secret
-      template: "{{ inventory_dir }}/../templates/game-room/git-secret-template.yml"
-      params_from_vars:
-        SECRET_NAME: git-auth
-        USERNAME: "{{ encrypted_password | b64encode }}"
-        PASSWORD: "{{ encrypted_password | b64encode }}"
-      namespace: "{{ non_prod_namespace }}"
-      tags:
-      - game-room
-      - secret
-      - build
     - name: pipeline-cd
       template: "{{ inventory_dir }}/../templates/game-room/pipeline-template.yml"
       params: "{{ inventory_dir }}/../params/game-room/pipeline-cd"
@@ -55,6 +44,22 @@ openshift_cluster_content:
       - game-room
       - service
       - non-prod
+    - name: cache
+      template: "{{ inventory_dir }}/../templates/game-room/redis-template.yml"
+      params: "{{ inventory_dir }}/../params/game-room/redis"
+      namespace: "{{ non_prod_namespace }}"
+      tags:
+      - game-room
+      - cache
+      - non-prod
+    - name: data-grid
+      template: "{{ inventory_dir }}/../templates/game-room/data-grid-template.yml"
+      params: "{{ inventory_dir }}/../params/game-room/data-grid"
+      namespace: "{{ non_prod_namespace }}"
+      tags:
+      - game-room
+      - data-grid
+      - non-prod
 - object: deploy-prod
   content:
     - name: service-blue
@@ -74,4 +79,20 @@ openshift_cluster_content:
       - game-room
       - green
       - service
+      - prod
+    - name: cache
+      template: "{{ inventory_dir }}/../templates/game-room/redis-template.yml"
+      params: "{{ inventory_dir }}/../params/game-room/redis"
+      namespace: "{{ prod_namespace }}"
+      tags:
+      - game-room
+      - cache
+      - prod
+    - name: data-grid
+      template: "{{ inventory_dir }}/../templates/game-room/data-grid-template.yml"
+      params: "{{ inventory_dir }}/../params/game-room/data-grid"
+      namespace: "{{ prod_namespace }}"
+      tags:
+      - game-room
+      - data-grid
       - prod

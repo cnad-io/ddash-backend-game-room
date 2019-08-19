@@ -1,7 +1,8 @@
 {
   "env": {
     "node": true,
-    "commonjs": true
+    "commonjs": true,
+    "mocha": true
   },
   "extends": "eslint:recommended",
   "parserOptions": {
@@ -90,7 +91,7 @@
     "max-lines-per-function": "error",
     "max-nested-callbacks": "error",
     "max-params": "error",
-    "max-statements": "error",
+    "max-statements": ["error", 15],
     "max-statements-per-line": "error",
     "multiline-comment-style": [
       "error",
@@ -214,7 +215,10 @@
     "padding-line-between-statements": "error",
     "prefer-arrow-callback": "off",
     "prefer-const": "error",
-    "prefer-destructuring": "error",
+    "prefer-destructuring": ["error", {
+      "array": true,
+      "object": true
+    }],
     "prefer-numeric-literals": "error",
     "prefer-object-spread": "error",
     "prefer-promise-reject-errors": "error",

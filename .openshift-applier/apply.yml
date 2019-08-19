@@ -1,13 +1,9 @@
 ---
-- name: Deploy Dino Dush backend
+- name: Deploy Dino dash backend
   hosts: app
   vars:
-    # ci_cd_namespace: dino-dush-ci-cd
-    non_prod_namespace: dino-dush-non-prod
-    prod_namespace: dino-dush-prod
+    non_prod_namespace: dino-dash-non-prod
+    prod_namespace: dino-dash-prod
   tasks:
-  - include_vars: "{{ inventory_dir }}/../encrypted-vars.yml"
   - include_role:
       name: openshift-applier/roles/openshift-applier
-  - name: Set maven slave image
-    shell: oc set env dc jenkins MAVEN_SLAVE_IMAGE=quay.io/camedeir/jenkins-agent-quarkus:latest -n "{{ non_prod_namespace }}"

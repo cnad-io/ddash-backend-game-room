@@ -2,12 +2,12 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 labels:
-  template: deploy-bg-template
+  template: deploy-template
   system: dino-dash
   app: game-room
   kind: nodejs
 metadata:
-  name: deploy-bg-template
+  name: deploy-template
 objects:
 - apiVersion: v1
   kind: ImageStream
@@ -31,7 +31,7 @@ objects:
       targetPort: 8080-ws
     to:
       kind: Service
-      name: ${APP_NAME}-${DEPLOYMENT_MODE}
+      name: ${APP_NAME}
       weight: 100
     wildcardPolicy: None
 - apiVersion: v1
@@ -41,17 +41,17 @@ objects:
       system: dino-dash
       app: ${APP_NAME}
       kind: nodejs
-      mode: ${DEPLOYMENT_MODE}
-    name: ${APP_NAME}-${DEPLOYMENT_MODE}
+    name: ${APP_NAME}
   spec:
     ports:
     - name: 8080-ws
       port: 8080
+    - name: 8081-ws
+      port: 8081
     selector:
       system: dino-dash
       app: ${APP_NAME}
       kind: nodejs
-      mode: ${DEPLOYMENT_MODE}
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -59,10 +59,9 @@ objects:
       system: dino-dash
       app: ${APP_NAME}
       kind: nodejs
-      mode: ${DEPLOYMENT_MODE}
     annotations:
       template.alpha.openshift.io/wait-for-ready: "true"
-    name: ${APP_NAME}-${DEPLOYMENT_MODE}
+    name: ${APP_NAME}
   spec:
     paused: true
     revisionHistoryLimit: 10
@@ -71,7 +70,6 @@ objects:
       system: dino-dash
       app: ${APP_NAME}
       kind: nodejs
-      mode: ${DEPLOYMENT_MODE}
     strategy:
       activeDeadlineSeconds: 21600
       resources:
@@ -95,16 +93,22 @@ objects:
           system: dino-dash
           app: ${APP_NAME}
           kind: nodejs
-          mode: ${DEPLOYMENT_MODE}
       spec:
         containers:
         - env:
             - name: REDIS_ADAPTER_URL
               value: ${REDIS_ADAPTER_URL}
+            - name: REDIS_ADAPTER_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: redis-game-room
+            - name: DATAGRID_HOST
+              value: ${DATAGRID_HOST}
           image: ' '
           imagePullPolicy: Always
           livenessProbe:
-            initialDelaySeconds: 1
+            initialDelaySeconds: 20
             failureThreshold: 3
             httpGet:
               path: /health
@@ -127,7 +131,7 @@ objects:
               path: /health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 1
+            initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
@@ -166,7 +170,7 @@ parameters:
   value: 50m
 - name: CPU_LIMIT
   required: true
-  value: 200m
+  value: 100m
 - name: MEMORY_REQUEST
   required: true
   value: 100Mi
@@ -184,6 +188,6 @@ parameters:
 - name: DEPLOYER_USER
   required: true
   value: jenkins
-- name: DEPLOYMENT_MODE
+- name: DATAGRID_HOST
   required: true
-  value: blue
+  value: ddash-datagrid-hotrod
