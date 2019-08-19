@@ -9,6 +9,7 @@ var Promise = require('bluebird');
 var db = [];
 
 var get = function (id) {
+  logger.trace('Mock client db getting', id);
   return new Promise(function (resolve, reject) {
     var filteredList = db.filter(function (value) {
       return value.id === id;
@@ -43,6 +44,7 @@ var put = function (id, value) {
 };
 
 var remove = function (id) {
+  logger.trace('Mock client db removing', id);
   return new Promise(function (resolve) {
     db = db.filter(function (value) {
       return value.id !== id;
