@@ -11,6 +11,8 @@ objects:
     metadata:
       annotations:
         template.openshift.io/expose-password: '{.data[''database-password'']}'
+      labels:
+        app: '${APP_NAME}'
       name: '${DATABASE_SERVICE_NAME}'
     stringData:
       database-password: '${REDIS_PASSWORD}'
@@ -19,6 +21,8 @@ objects:
     metadata:
       annotations:
         template.openshift.io/expose-uri: 'redis://{.spec.clusterIP}:{.spec.ports[?(.name=="redis")].port}'
+      labels:
+        app: '${APP_NAME}'
       name: '${DATABASE_SERVICE_NAME}'
     spec:
       ports:
@@ -28,36 +32,41 @@ objects:
           protocol: TCP
           targetPort: 6379
       selector:
+        app: '${APP_NAME}'
         name: '${DATABASE_SERVICE_NAME}'
       sessionAffinity: None
       type: ClusterIP
     status:
       loadBalancer: {}
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: '${DATABASE_SERVICE_NAME}'
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: '${VOLUME_CAPACITY}'
+  #- apiVersion: v1
+  #  kind: PersistentVolumeClaim
+  #  metadata:
+  #    name: '${DATABASE_SERVICE_NAME}'
+  #  spec:
+  #    accessModes:
+  #      - ReadWriteOnce
+  #    resources:
+  #      requests:
+  #        storage: '${VOLUME_CAPACITY}'
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
       annotations:
         template.alpha.openshift.io/wait-for-ready: 'true'
+      labels:
+        app: '${APP_NAME}'
       name: '${DATABASE_SERVICE_NAME}'
     spec:
       replicas: 1
       selector:
+        app: '${APP_NAME}'
         name: '${DATABASE_SERVICE_NAME}'
       strategy:
         type: Recreate
       template:
         metadata:
           labels:
+            app: '${APP_NAME}'
             name: '${DATABASE_SERVICE_NAME}'
         spec:
           containers:
@@ -104,8 +113,9 @@ objects:
           restartPolicy: Always
           volumes:
             - name: '${DATABASE_SERVICE_NAME}-data'
-              persistentVolumeClaim:
-                claimName: '${DATABASE_SERVICE_NAME}'
+              emptyDir: {}
+              #persistentVolumeClaim:
+              #  claimName: '${DATABASE_SERVICE_NAME}'
       triggers:
         - imageChangeParams:
             automatic: true
@@ -138,3 +148,6 @@ parameters:
   - name: REDIS_VERSION
     required: true
     value: '3.2'
+  - name: APP_NAME
+    require: true
+    value: game-room

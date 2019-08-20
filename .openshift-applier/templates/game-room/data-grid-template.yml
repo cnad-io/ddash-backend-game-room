@@ -1,91 +1,28 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 labels:
-  template: datagrid73-mysql-persistent
+  template: cache-service
 metadata:
-  name: datagrid73-mysql-persistent
+  name: cache-service
 objects:
   - apiVersion: v1
-    kind: Service
+    kind: Secret
     metadata:
-      annotations:
-        description: The web server's HTTP port.
-        service.alpha.openshift.io/dependencies: '[{"name": "${APPLICATION_NAME}-mysql", "kind": "Service"}]'
       labels:
+        app: '${APP_NAME}'
         application: '${APPLICATION_NAME}'
       name: '${APPLICATION_NAME}'
-    spec:
-      ports:
-        - port: 8080
-          targetPort: 8080
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}'
+    stringData:
+      application-password: '${APPLICATION_PASSWORD}'
+      application-user: '${APPLICATION_USER}'
   - apiVersion: v1
     kind: Service
     metadata:
       annotations:
-        description: The web server's HTTPS port.
-        service.alpha.openshift.io/dependencies: '[{"name": "${APPLICATION_NAME}-mysql", "kind": "Service"}]'
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: 'secure-${APPLICATION_NAME}'
-    spec:
-      ports:
-        - port: 8443
-          targetPort: 8443
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}'
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        description: Memcached service for clustered applications.
-        service.alpha.openshift.io/dependencies: '[{"name": "${APPLICATION_NAME}-mysql", "kind": "Service"}]'
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}-memcached'
-    spec:
-      ports:
-        - port: 11211
-          targetPort: 11211
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}'
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        description: Hot Rod service for clustered applications.
-        service.alpha.openshift.io/dependencies: '[{"name": "${APPLICATION_NAME}-mysql", "kind": "Service"}]'
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}-hotrod'
-    spec:
-      ports:
-        - port: 11333
-          targetPort: 11333
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}'
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        description: The database server's port.
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}-mysql'
-    spec:
-      ports:
-        - port: 3306
-          targetPort: 3306
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}-mysql'
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        description: The JGroups ping port for clustering.
+        description: Provides a ping service for clustered applications.
         service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
       labels:
+        app: '${APP_NAME}'
         application: '${APPLICATION_NAME}'
       name: '${APPLICATION_NAME}-ping'
     spec:
@@ -96,359 +33,165 @@ objects:
       selector:
         deploymentConfig: '${APPLICATION_NAME}'
   - apiVersion: v1
-    id: '${APPLICATION_NAME}-http'
-    kind: Route
+    kind: Service
     metadata:
       annotations:
-        description: Route for application's HTTP service.
+        description: >-
+          Provides a service for accessing the application over HTTPS or Hot Rod
+          protocol.
+        service.alpha.openshift.io/serving-cert-secret-name: service-certs
       labels:
+        app: ${APP_NAME}
         application: '${APPLICATION_NAME}'
       name: '${APPLICATION_NAME}'
     spec:
-      host: '${HOSTNAME_HTTP}'
-      to:
-        name: '${APPLICATION_NAME}'
-  - apiVersion: v1
-    id: '${APPLICATION_NAME}-https'
-    kind: Route
-    metadata:
-      annotations:
-        description: Route for application's HTTPS service.
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: 'secure-${APPLICATION_NAME}'
-    spec:
-      host: '${HOSTNAME_HTTPS}'
-      tls:
-        termination: passthrough
-      to:
-        name: 'secure-${APPLICATION_NAME}'
-  - apiVersion: v1
-    kind: DeploymentConfig
-    metadata:
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}'
-    spec:
-      replicas: 1
+      ports:
+        - name: hotrod
+          port: 11222
+          targetPort: 11222
+        - name: https
+          port: 8443
+          targetPort: 8443
       selector:
+        app: '${APP_NAME}'
+        application: '${APPLICATION_NAME}'
         deploymentConfig: '${APPLICATION_NAME}'
+  - apiVersion: apps/v1beta1
+    kind: StatefulSet
+    metadata:
+      labels:
+        app: '${APP_NAME}'
+        application: '${APPLICATION_NAME}'
+      name: '${APPLICATION_NAME}'
+    spec:
+      replicas: '${{NUMBER_OF_INSTANCES}}'
+      serviceName: '${APPLICATION_NAME}-ping'
       strategy:
-        type: Recreate
+        rollingParams:
+          intervalSeconds: 20
+          maxSurge: 1
+          maxUnavailable: 1
+          timeoutSeconds: 1200
+          updatePeriodSeconds: 20
+        type: Rolling
       template:
         metadata:
           labels:
+            app: ${APP_NAME}
             application: '${APPLICATION_NAME}'
             deploymentConfig: '${APPLICATION_NAME}'
           name: '${APPLICATION_NAME}'
         spec:
           containers:
             - env:
-                - name: USERNAME
-                  value: '${USERNAME}'
-                - name: PASSWORD
-                  value: '${PASSWORD}'
-                - name: ADMIN_GROUP
-                  value: '${ADMIN_GROUP}'
-                - name: HOTROD_AUTHENTICATION
-                  value: '${HOTROD_AUTHENTICATION}'
-                - name: CONTAINER_SECURITY_ROLE_MAPPER
-                  value: '${CONTAINER_SECURITY_ROLE_MAPPER}'
-                - name: CONTAINER_SECURITY_ROLES
-                  value: '${CONTAINER_SECURITY_ROLES}'
-                - name: HTTPS_KEYSTORE_DIR
-                  value: /etc/datagrid-secret-volume
-                - name: HTTPS_KEYSTORE
-                  value: '${HTTPS_KEYSTORE}'
-                - name: HTTPS_NAME
-                  value: '${HTTPS_NAME}'
-                - name: HTTPS_PASSWORD
-                  value: '${HTTPS_PASSWORD}'
-                - name: DB_SERVICE_PREFIX_MAPPING
-                  value: '${APPLICATION_NAME}-mysql=DB'
-                - name: DB_JNDI
-                  value: '${DB_JNDI}'
-                - name: DB_USERNAME
-                  value: '${DB_USERNAME}'
-                - name: DB_PASSWORD
-                  value: '${DB_PASSWORD}'
-                - name: DB_DATABASE
-                  value: '${DB_DATABASE}'
-                - name: TX_DATABASE_PREFIX_MAPPING
-                  value: '${APPLICATION_NAME}-mysql=DB'
-                - name: DB_MIN_POOL_SIZE
-                  value: '${DB_MIN_POOL_SIZE}'
-                - name: DB_MAX_POOL_SIZE
-                  value: '${DB_MAX_POOL_SIZE}'
-                - name: DB_TX_ISOLATION
-                  value: '${DB_TX_ISOLATION}'
-                - name: DEFAULT_JDBC_STORE_TYPE
-                  value: string
-                - name: DEFAULT_JDBC_STORE_DATASOURCE
-                  value: '${DB_JNDI}'
-                - name: MEMCACHED_JDBC_STORE_TYPE
-                  value: string
-                - name: MEMCACHED_JDBC_STORE_DATASOURCE
-                  value: '${DB_JNDI}'
+                - name: SERVICE_NAME
+                  value: '${APPLICATION_NAME}'
+                - name: SERVICE_PROFILE
+                  value: cache-service
                 - name: JGROUPS_PING_PROTOCOL
                   value: openshift.DNS_PING
                 - name: OPENSHIFT_DNS_PING_SERVICE_NAME
                   value: '${APPLICATION_NAME}-ping'
-                - name: OPENSHIFT_DNS_PING_SERVICE_PORT
-                  value: '8888'
-                - name: INFINISPAN_CONNECTORS
-                  value: '${INFINISPAN_CONNECTORS}'
-                - name: CACHE_NAMES
-                  value: '${CACHE_NAMES}'
-                - name: DATAVIRT_CACHE_NAMES
-                  value: '${DATAVIRT_CACHE_NAMES}'
-                - name: CACHE_TYPE_DEFAULT
-                  value: '${CACHE_TYPE_DEFAULT}'
-                - name: ENCRYPTION_REQUIRE_SSL_CLIENT_AUTH
-                  value: '${ENCRYPTION_REQUIRE_SSL_CLIENT_AUTH}'
-                - name: HOTROD_SERVICE_NAME
-                  value: '${APPLICATION_NAME}-hotrod'
-                - name: HOTROD_ENCRYPTION
-                  value: '${HTTPS_NAME}'
-                - name: MEMCACHED_CACHE
-                  value: '${MEMCACHED_CACHE}'
-                - name: REST_SECURITY_DOMAIN
-                  value: '${REST_SECURITY_DOMAIN}'
-                - name: JGROUPS_ENCRYPT_SECRET
-                  value: '${JGROUPS_ENCRYPT_SECRET}'
-                - name: JGROUPS_ENCRYPT_KEYSTORE
-                  value: '${JGROUPS_ENCRYPT_KEYSTORE}'
-                - name: JGROUPS_ENCRYPT_KEYSTORE_DIR
-                  value: /etc/jgroups-encrypt-secret-volume
-                - name: JGROUPS_ENCRYPT_NAME
-                  value: '${JGROUPS_ENCRYPT_NAME}'
-                - name: JGROUPS_ENCRYPT_PASSWORD
-                  value: '${JGROUPS_ENCRYPT_PASSWORD}'
-                - name: JGROUPS_CLUSTER_PASSWORD
-                  value: '${JGROUPS_CLUSTER_PASSWORD}'
-              image: jboss-datagrid73-openshift
-              imagePullPolicy: Always
+                - name: USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: application-user
+                      name: '${APPLICATION_NAME}'
+                - name: PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: application-password
+                      name: '${APPLICATION_NAME}'
+                - name: REPLICATION_FACTOR
+                  value: '${REPLICATION_FACTOR}'
+                - name: EVICTION_POLICY
+                  value: '${EVICTION_POLICY}'
+              image: '${IMAGE}'
               livenessProbe:
                 exec:
                   command:
-                    - /bin/bash
-                    - '-c'
                     - /opt/datagrid/bin/livenessProbe.sh
-                initialDelaySeconds: 60
+                failureThreshold: 5
+                initialDelaySeconds: 15
+                periodSeconds: 20
+                successThreshold: 1
+                timeoutSeconds: 10
               name: '${APPLICATION_NAME}'
               ports:
-                - containerPort: 8778
-                  name: jolokia
-                  protocol: TCP
-                - containerPort: 8080
-                  name: http
-                  protocol: TCP
                 - containerPort: 8443
                   name: https
                   protocol: TCP
                 - containerPort: 8888
                   name: ping
                   protocol: TCP
-                - containerPort: 11211
-                  name: memcached
-                  protocol: TCP
                 - containerPort: 11222
-                  name: hotrod-internal
-                  protocol: TCP
-                - containerPort: 11333
                   name: hotrod
                   protocol: TCP
               readinessProbe:
                 exec:
                   command:
-                    - /bin/bash
-                    - '-c'
                     - /opt/datagrid/bin/readinessProbe.sh
+                failureThreshold: 5
+                initialDelaySeconds: 17
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 10
               resources:
                 limits:
-                  memory: '${MEMORY_LIMIT}'
+                  memory: '${TOTAL_CONTAINER_MEM}Mi'
+                requests:
+                  cpu: '0.5'
+                  memory: '${TOTAL_CONTAINER_MEM}Mi'
               volumeMounts:
-                - mountPath: /etc/datagrid-secret-volume
-                  name: datagrid-keystore-volume
-                  readOnly: true
-                - mountPath: /etc/jgroups-encrypt-secret-volume
-                  name: datagrid-jgroups-keystore-volume
-                  readOnly: true
+                - mountPath: /opt/datagrid/standalone/data
+                  name: srv-data
+                - mountPath: /var/run/secrets/java.io/keystores
+                  name: keystore-volume
+                - mountPath: /var/run/secrets/openshift.io/serviceaccount
+                  name: service-certs
           terminationGracePeriodSeconds: 60
           volumes:
-            - name: datagrid-keystore-volume
+            - empty-dir: {}
+              name: srv-data
+            - empty-dir: {}
+              name: keystore-volume
+            - name: service-certs
               secret:
-                secretName: '${HTTPS_SECRET}'
-            - name: datagrid-jgroups-keystore-volume
-              secret:
-                secretName: '${JGROUPS_ENCRYPT_SECRET}'
+                secretName: service-certs
       triggers:
-        - imageChangeParams:
-            automatic: true
-            containerNames:
-              - '${APPLICATION_NAME}'
-            from:
-              kind: ImageStreamTag
-              name: 'jboss-datagrid73-openshift:1.0'
-              namespace: '${IMAGE_STREAM_NAMESPACE}'
-          type: ImageChange
         - type: ConfigChange
-  - apiVersion: v1
-    kind: DeploymentConfig
-    metadata:
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}-mysql'
-    spec:
-      replicas: 1
-      selector:
-        deploymentConfig: '${APPLICATION_NAME}-mysql'
-      strategy:
-        type: Recreate
-      template:
-        metadata:
-          labels:
-            application: '${APPLICATION_NAME}'
-            deploymentConfig: '${APPLICATION_NAME}-mysql'
-          name: '${APPLICATION_NAME}-mysql'
-        spec:
-          containers:
-            - env:
-                - name: MYSQL_USER
-                  value: '${DB_USERNAME}'
-                - name: MYSQL_PASSWORD
-                  value: '${DB_PASSWORD}'
-                - name: MYSQL_DATABASE
-                  value: '${DB_DATABASE}'
-                - name: MYSQL_LOWER_CASE_TABLE_NAMES
-                  value: '${MYSQL_LOWER_CASE_TABLE_NAMES}'
-                - name: MYSQL_MAX_CONNECTIONS
-                  value: '${MYSQL_MAX_CONNECTIONS}'
-                - name: MYSQL_FT_MIN_WORD_LEN
-                  value: '${MYSQL_FT_MIN_WORD_LEN}'
-                - name: MYSQL_FT_MAX_WORD_LEN
-                  value: '${MYSQL_FT_MAX_WORD_LEN}'
-                - name: MYSQL_AIO
-                  value: '${MYSQL_AIO}'
-              image: mysql
-              imagePullPolicy: Always
-              livenessProbe:
-                initialDelaySeconds: 30
-                tcpSocket:
-                  port: 3306
-                timeoutSeconds: 1
-              name: '${APPLICATION_NAME}-mysql'
-              ports:
-                - containerPort: 3306
-                  protocol: TCP
-              readinessProbe:
-                exec:
-                  command:
-                    - /bin/sh
-                    - '-i'
-                    - '-c'
-                    - >-
-                      MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u
-                      $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'
-                initialDelaySeconds: 5
-                timeoutSeconds: 1
-              volumeMounts:
-                - mountPath: /var/lib/mysql/data
-                  name: '${APPLICATION_NAME}-mysql-pvol'
-          volumes:
-            - name: '${APPLICATION_NAME}-mysql-pvol'
-              persistentVolumeClaim:
-                claimName: '${APPLICATION_NAME}-mysql-claim'
-      triggers:
-        - imageChangeParams:
-            automatic: true
-            containerNames:
-              - '${APPLICATION_NAME}-mysql'
-            from:
-              kind: ImageStreamTag
-              name: 'mysql:${MYSQL_IMAGE_STREAM_TAG}'
-              namespace: '${IMAGE_STREAM_NAMESPACE}'
-          type: ImageChange
-        - type: ConfigChange
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      labels:
-        application: '${APPLICATION_NAME}'
-      name: '${APPLICATION_NAME}-mysql-claim'
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: '${VOLUME_CAPACITY}'
+      #volumeClaimTemplates:
+      #  - metadata:
+      #      name: srv-data
+      #    spec:
+      #      accessModes:
+      #        - ReadWriteOnce
+      #      resources:
+      #        requests:
+      #          storage: 1Gi
 parameters:
   - name: APPLICATION_NAME
     required: true
-    value: datagrid-app
-  - name: HOSTNAME_HTTP
-  - name: HOSTNAME_HTTPS
-  - name: USERNAME
-  - name: PASSWORD
-  - name: ADMIN_GROUP
-  - name: HOTROD_AUTHENTICATION
-  - name: CONTAINER_SECURITY_ROLE_MAPPER
-  - name: CONTAINER_SECURITY_ROLES
-  - name: HTTPS_SECRET
+    value: cache-service
+  - name: IMAGE
     required: true
-    value: datagrid-app-secret
-  - name: HTTPS_KEYSTORE
-    value: keystore.jks
-  - name: HTTPS_NAME
-  - name: HTTPS_PASSWORD
-  - name: DB_JNDI
-    value: 'java:/jboss/datasources/mysql'
-  - name: DB_DATABASE
+    value: registry.redhat.io/jboss-datagrid-7/datagrid73-openshift
+  - name: NUMBER_OF_INSTANCES
     required: true
-    value: root
-  - from: 'user[a-zA-Z0-9]{3}'
+    value: '1'
+  - name: REPLICATION_FACTOR
+    required: true
+    value: '1'
+  - name: EVICTION_POLICY
+    required: true
+    value: evict
+  - name: TOTAL_CONTAINER_MEM
+    value: '512'
+  - name: APPLICATION_USER
+    required: true
+  - from: '[a-zA-Z0-9]{16}'
     generate: expression
-    name: DB_USERNAME
-    required: true
-  - from: '[a-zA-Z0-9]{8}'
-    generate: expression
-    name: DB_PASSWORD
-    required: true
-  - name: DB_MIN_POOL_SIZE
-  - name: DB_MAX_POOL_SIZE
-  - name: DB_TX_ISOLATION
-  - name: MYSQL_LOWER_CASE_TABLE_NAMES
-  - name: MYSQL_MAX_CONNECTIONS
-  - name: MYSQL_FT_MIN_WORD_LEN
-  - name: MYSQL_FT_MAX_WORD_LEN
-  - name: MYSQL_AIO
-  - name: VOLUME_CAPACITY
-    required: true
-    value: 1Gi
-  - name: IMAGE_STREAM_NAMESPACE
-    required: true
-    value: openshift
-  - name: INFINISPAN_CONNECTORS
-    value: 'hotrod,memcached,rest'
-  - name: CACHE_NAMES
-  - name: DATAVIRT_CACHE_NAMES
-  - name: CACHE_TYPE_DEFAULT
-  - name: ENCRYPTION_REQUIRE_SSL_CLIENT_AUTH
-  - name: MEMCACHED_CACHE
-    value: default_memcached
-  - name: REST_SECURITY_DOMAIN
-  - name: JGROUPS_ENCRYPT_SECRET
-    value: datagrid-app-secret
-  - name: JGROUPS_ENCRYPT_KEYSTORE
-    value: jgroups.jceks
-  - name: JGROUPS_ENCRYPT_NAME
-  - name: JGROUPS_ENCRYPT_PASSWORD
-  - from: '[a-zA-Z0-9]{8}'
-    generate: expression
-    name: JGROUPS_CLUSTER_PASSWORD
-    required: true
-  - name: MYSQL_IMAGE_STREAM_TAG
-    required: true
-    value: '5.7'
-  - name: MEMORY_LIMIT
-    value: 1Gi
+    name: APPLICATION_PASSWORD
+  - name: APP_NAME
+    require: true
+    value: game-room

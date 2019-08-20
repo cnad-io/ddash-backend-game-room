@@ -30,5 +30,5 @@ bash-4.4$ cd /home/tool-box/workarea/.openshift-applier/
 # Install openshift applier role
 bash-4.4$ ansible-galaxy install -r requirements.yml --roles-path=roles --f
 # And finally, execute the ansible playbook
-bash-4.4$ ansible-playbook --ask-vault-pass apply.yml -i inventory/
+bash-4.4$ ansible-playbook apply.yml -i inventory/
 ```

@@ -101,6 +101,15 @@ objects:
         - env:
             - name: REDIS_ADAPTER_URL
               value: ${REDIS_ADAPTER_URL}
+            - name: REDIS_ADAPTER_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: redis-game-room
+            - name: DATAGRID_HOST
+              value: ${DATAGRID_HOST}
+            - name: DATAGRID_PORT
+              value: ${DATAGRID_PORT}
           image: ' '
           imagePullPolicy: Always
           livenessProbe:
@@ -187,3 +196,9 @@ parameters:
 - name: DEPLOYMENT_MODE
   required: true
   value: blue
+- name: DATAGRID_HOST
+  required: true
+  value: ddash-datagrid
+- name: DATAGRID_PORT
+  required: true
+  value: '11222'

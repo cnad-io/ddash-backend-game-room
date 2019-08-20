@@ -12,7 +12,7 @@ var getClient = function () {
   if (process.env.NODE_ENV === 'production') {
     logger.trace('Return infinispan client');
     return infinispan.client({
-      port: process.env.DATAGRID_PORT || 11333,
+      port: process.env.DATAGRID_PORT || 11222,
       host: process.env.DATAGRID_HOST || 'ddash-datagrid-hotrod'
     }, {
       cacheName: process.env.DATAGRID_CACHE_NAME || 'game-room',
