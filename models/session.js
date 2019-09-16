@@ -100,7 +100,7 @@ Session.prototype.deletePlayer = function (playerId) {
 Session.prototype.find = function () {
   var id = this.roomId;
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/room/' + id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + id;
     logger.trace('URL for get room from room management', url);
     request.get(url, function (error, res, body) {
       if (error) {
@@ -145,7 +145,7 @@ Session.prototype.save = function () {
     client.put('room.' + session.id, session);
   });
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/room/' + session.id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + session.id;
     logger.trace('URL for delete room from room management', url);
     request.put({
       url: url,
@@ -169,7 +169,7 @@ Session.prototype.delete = function () {
     client.remove('room.' + id);
   });
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/room/' + id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + id;
     logger.trace('URL for delete room from room management', url);
     request.put({
       url: url,

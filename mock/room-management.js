@@ -22,7 +22,7 @@ var rooms = [
 /* eslint max-statements: ["error", 40], max-lines-per-function: ["error", 70] */
 module.exports = function (req, res) {
   var room = {};
-  if (req.method === 'GET' && req.url === '/room') {
+  if (req.method === 'GET' && req.url === '/api/room') {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.write(JSON.stringify(rooms));
@@ -45,7 +45,7 @@ module.exports = function (req, res) {
     }
     res.end();
   }
-  if (req.method === 'POST' && req.url === '/room') {
+  if (req.method === 'POST' && req.url === '/api/room') {
     room = {
       id: uuid(),
       date: Date.now(),
