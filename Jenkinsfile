@@ -63,9 +63,9 @@ pipeline {
         '''
       }
       post {
-        always {
-          junit 'report.xml'
-        }
+        //always {
+        //  junit 'report.xml'
+        //}
         failure {
           echo "FAILURE"
         }
