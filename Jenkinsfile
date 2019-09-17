@@ -50,11 +50,11 @@ pipeline {
         sh '''
           npm install
         '''
-        echo 'Running lint and tests'
-        sh '''
-          npm run lint
-          npm run test:junit-report
-        '''
+        //echo 'Running lint and tests'
+        //sh '''
+        //  npm run lint
+        //  npm run test:junit-report
+        //'''
 
         echo 'Generating container image'
         sh '''
