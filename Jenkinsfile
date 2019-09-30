@@ -145,7 +145,7 @@ pipeline {
 
         echo '### Change balance configuration ###'
         sh '''
-          oc set route-backends ${APP_NAME} ${APP_NAME}-${ACTIVE_MODE}=0 ${APP_NAME}-${NOT_ACTIVE_MODE}=100 -n ${PROD_NAMESPACE}
+          oc set route-backends ${APP_NAME} ${APP_NAME}-${ACTIVE_MODE}=0% ${APP_NAME}-${NOT_ACTIVE_MODE}=100% -n ${PROD_NAMESPACE}
         '''
       }
     }
