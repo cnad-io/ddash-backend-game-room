@@ -29,7 +29,7 @@ module.exports = function (io) {
         }
       } else if (connected.length !== playerList.length && !intervalProcess) {
         intervalProcess = setInterval(function () {
-          logger.debug('Starting interval process because all users are not connected yet', connected, session);
+          logger.info('Starting interval process because all users are not connected yet', connected, session);
           sessionController.find(session.id)
           .then(checkGameRoom);
         }, 1000);
@@ -37,7 +37,7 @@ module.exports = function (io) {
         var index = attempts.find(function (value) {
           return value.id === session.id;
         });
-        logger.debug('Game room can not be ready because all users are not connected yet', connected, session);
+        logger.info('Game room can not be ready because all users are not connected yet', connected, session);
         if (index <= -1) {
           attempts.push({
             id: session.id,
@@ -47,7 +47,7 @@ module.exports = function (io) {
           clearInterval(intervalProcess);
           sessionController.remove(session.id);
         } else {
-          logger.trace('Attempt to put ready the game room', attempts[index].number, session.id);
+          logger.info('Attempt to put ready the game room', attempts[index].number, session.id);
           attempts[index].number -= 1;
         }
       }
