@@ -46,7 +46,7 @@ var joinPlayer = function (roomId, player) {
     logger.info('Joining player in game session');
     logger.info('Session id where Player is trying to join', roomId, player);
     find(roomId).then(function (session) {
-      logger.debug('Session found', session, typeof session);
+      logger.info('Session found', session, typeof session);
       // eslint-disable-next-line no-undef
       Reflect.deleteProperty(player, 'roomId');
       player.connected = true;
