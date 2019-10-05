@@ -44,7 +44,7 @@ var savePlayer = function (id, player) {
 var joinPlayer = function (roomId, player) {
   return new Promise(function (resolve, reject) {
     logger.info('Joining player in game session');
-    logger.debug('Session id where Player is trying to join', roomId, player);
+    logger.info('Session id where Player is trying to join', roomId, player);
     find(roomId).then(function (session) {
       logger.debug('Session found', session, typeof session);
       // eslint-disable-next-line no-undef
