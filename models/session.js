@@ -100,7 +100,7 @@ Session.prototype.deletePlayer = function (playerId) {
 Session.prototype.find = function () {
   var id = this.roomId;
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://room-management:3000') + '/api/room/' + id;
     logger.trace('URL for get room from room management', url);
     request.get(url, function (error, res, body) {
       if (error) {

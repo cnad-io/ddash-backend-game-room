@@ -59,7 +59,7 @@ var joinPlayer = function (roomId, player) {
       });
     });
   }).catch(function (error) {
-    logger.error('Error when tried to fiend a session with id', roomId, error);
+    logger.error('Error when tried to find a session with id', roomId, error);
   });
 };
 
