@@ -37,6 +37,7 @@ var getClient = function () {
 // eslint-disable-next-line max-params
 var Session = function (roomId, date, playerList, state) {
   this.roomId = roomId;
+  this.id = roomId;
   this.date = date;
   this.playerList = playerList;
   this.state = state;
@@ -145,7 +146,7 @@ Session.prototype.save = function () {
     client.put('room.' + session.id, session);
   });
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + session.id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://room-management:3000') + '/api/room/' + session.id;
     logger.trace('URL for delete room from room management', url);
     request.put({
       url: url,
@@ -169,7 +170,7 @@ Session.prototype.delete = function () {
     client.remove('room.' + id);
   });
   return new Promise(function (resolve, reject) {
-    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://localhost:8080') + '/api/room/' + id;
+    var url = (process.env.ROOM_MANAGEMENT_URL || 'http://room-management:3000') + '/api/room/' + id;
     logger.trace('URL for delete room from room management', url);
     request.put({
       url: url,
