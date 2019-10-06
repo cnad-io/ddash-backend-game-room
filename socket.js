@@ -14,12 +14,12 @@ module.exports = function (io) {
   var checkGameRoom = function (session) {
     // eslint-disable-next-line max-statements
     sessionController.findPlayers(session).then(function (playerList) {
-      logger.trace('Players joined with session', playerList, session);
+      logger.info('Players joined with session', playerList, session);
       var connected = playerList.filter(function (value) {
         return value.connected;
       });
       if (connected.length === playerList.length) {
-        logger.trace('Emitting Game ready');
+        logger.info('Emitting Game ready');
         io.to(session.id).emit(
           events.public.out.gameReady,
           session
@@ -33,7 +33,7 @@ module.exports = function (io) {
           sessionController.find(session.id)
           .then(checkGameRoom);
         }, 1000);
-      } else {
+      } else {trace
         var index = attempts.find(function (value) {
           return value.id === session.id;
         });
