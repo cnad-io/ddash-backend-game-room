@@ -9,7 +9,8 @@ var Promise = require('bluebird');
 var request = require('request');
 
 var getClient = function () {
-  if (process.env.NODE_ENV === 'production!') {
+  /*fix DG*/
+  if (process.env.NODE_ENV === 'production-') {
     logger.trace('Return infinispan client');
     return infinispan.client({
       port: process.env.DATAGRID_PORT || 11222,
@@ -31,15 +32,15 @@ var getClient = function () {
  * @constructor
  * @param {String} roomId - The room's identifier for a session
  * @param {Date} date - The session's creation date
- * @param {Array.<Player>} playerList - The list of players in the session
+ * @param {Array.<Player>} users - The list of players in the session
  * @param {String} state - The state of the session
  */
 // eslint-disable-next-line max-params
-var Session = function (roomId, date, playerList, state) {
+var Session = function (roomId, date, users, state) {
   this.roomId = roomId;
   this.id = roomId;
   this.date = date;
-  this.playerList = playerList;
+  this.users = users;
   this.state = state;
 };
 
@@ -66,14 +67,15 @@ Session.prototype.getPlayer = function (playerId) {
 Session.prototype.getPlayers = function (session) {
   return new Promise(function (resolve, reject) {
     getClient().then(function (client) {
-      var processes = session.playerList.map(function (value) {
-        return client.get(session.id + '.player.' + value.id);
+      var processes = session.users.map(function (value) {
+        logger.info("value", value)
+        return client.get(session.id + '.player.' + value.nickname);
       });
-      Promise.all(processes).then(function (playerList) {
-        if (typeof playerList === 'string') {
-          resolve(JSON.parse(playerList));
+      Promise.all(processes).then(function (users) {
+        if (typeof users === 'string') {
+          resolve(JSON.parse(users));
         } else {
-          resolve(playerList);
+          resolve(users);
         }
       })
       .catch(reject);
@@ -87,7 +89,7 @@ Session.prototype.savePlayer = function (id, player) {
   
   return getClient().then(function (client) {
     logger.trace('Saving player on cache DB', id, player);
-    return client.put(id + '.player.' + player.id, player);
+    return client.put(id + '.player.' + player.nickname, player);
   });
 };
 
@@ -140,7 +142,7 @@ Session.prototype.save = function () {
   var session = {
     id: this.roomId,
     date: this.date,
-    playerList: this.playerList,
+    playerList: this.users,
     state: this.state
   };
   getClient.then(function (client) {

@@ -13,12 +13,12 @@ var attempts = [];
 module.exports = function (io) {
   var checkGameRoom = function (session) {
     // eslint-disable-next-line max-statements
-    sessionController.findPlayers(session).then(function (playerList) {
-      logger.info('Players joined with session', playerList, session);
-      var connected = playerList.filter(function (value) {
+    sessionController.findPlayers(session).then(function (users) {
+      logger.info('Players joined with session', users, session);
+      var connected = users.filter(function (value) {
         return value.connected;
       });
-      if (connected.length === playerList.length) {
+      if (connected.length === users.length) {
         logger.info('Emitting Game ready');
         io.to(session.id).emit(
           events.public.out.gameReady,
@@ -27,7 +27,7 @@ module.exports = function (io) {
         if (intervalProcess) {
           clearInterval(intervalProcess);
         }
-      } else if (connected.length !== playerList.length && !intervalProcess) {
+      } else if (connected.length !== users.length && !intervalProcess) {
         intervalProcess = setInterval(function () {
           logger.info('Starting interval process because all users are not connected yet', connected, session);
           sessionController.find(session.id)
@@ -81,9 +81,9 @@ module.exports = function (io) {
       if (!data.roomId) {
         socket.disconnect();
       }
-      sessionController.playerMove(data);
       socket.broadcast.to(data.roomId)
       .emit(events.public.out.remotePlayerMoved, data);
+      sessionController.playerMove(data);
     });
     socket.on(events.public.in.disconnect, function () {
       logger.debug('Room where player is disconnecting');

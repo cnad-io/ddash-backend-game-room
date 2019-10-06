@@ -38,6 +38,7 @@ var remove = function (id) {
 var savePlayer = function (id, player) {
   logger.info('Saving player in cache db');
   logger.debug('Saving player info', id, player);
+  Reflect.defineProperty(player, 'id', {value: player.nickname})
   return new Session().savePlayer(id, player);
 };
 
@@ -81,7 +82,18 @@ var playerDisconnected = function (socketId, roomId) {
 var playerMove = function (player) {
   logger.debug('Player moved', player);
   return new Promise(function (resolve, reject) {
-    find(player.roomId).then(function (session) {
+      // eslint-disable-next-line no-undef
+      var roomId = player.roomId;
+      Reflect.deleteProperty(player, 'roomId');
+      savePlayer(roomId, player).then(function () {
+        resolve();
+      })
+      .catch(function (error) {
+        logger.error('Error trying to save player', error);
+        reject(error);
+      });
+    
+/*     find(player.roomId).then(function (session) {
       logger.trace('Player moved proceed because session was found', session);
       // eslint-disable-next-line no-undef
       Reflect.deleteProperty(player, 'roomId');
@@ -92,7 +104,7 @@ var playerMove = function (player) {
         logger.error('Error trying to save player', error);
         reject(error);
       });
-    });
+    }); */
   });
 };
 
