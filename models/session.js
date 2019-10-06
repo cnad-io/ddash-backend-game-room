@@ -83,10 +83,14 @@ Session.prototype.getPlayers = function (session) {
 };
 
 Session.prototype.savePlayer = function (id, player) {
+  return new Promise(function (resolve) {
   logger.trace('Saving player with session');
-  return getClient().then(function (client) {
-    logger.trace('Saving player on cache DB', id, player);
-    return client.put(id + '.player.' + player.id, player);
+
+    getClient().then(function (client) {
+      logger.trace('Saving player on cache DB', id, player);
+      client.put(id + '.player.' + player.id, player);
+      resolve();
+    });
   });
 };
 
