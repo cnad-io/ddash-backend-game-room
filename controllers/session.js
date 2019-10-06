@@ -51,6 +51,7 @@ var joinPlayer = function (roomId, player) {
       Reflect.deleteProperty(player, 'roomId');
       player.connected = true;
       savePlayer(session.id, player).then(function () {
+        logger.info('Saved', session);
         resolve(session);
       })
       .catch(function (error) {
