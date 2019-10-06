@@ -38,12 +38,7 @@ var remove = function (id) {
 var savePlayer = function (id, player) {
   logger.info('Saving player in cache db');
   logger.debug('Saving player info', id, player);
-  return new Promise(function (resolve) {
-    new Session().savePlayer(id, player).then(function () {
-      resolve();
-    });
-  
-  }); 
+  return new Session().savePlayer(id, player);
 };
 
 var joinPlayer = function (roomId, player) {

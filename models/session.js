@@ -9,7 +9,7 @@ var Promise = require('bluebird');
 var request = require('request');
 
 var getClient = function () {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production!') {
     logger.trace('Return infinispan client');
     return infinispan.client({
       port: process.env.DATAGRID_PORT || 11222,
@@ -83,14 +83,11 @@ Session.prototype.getPlayers = function (session) {
 };
 
 Session.prototype.savePlayer = function (id, player) {
-  return new Promise(function (resolve) {
   logger.trace('Saving player with session');
-
-    getClient().then(function (client) {
-      logger.trace('Saving player on cache DB', id, player);
-      client.put(id + '.player.' + player.id, player);
-      resolve();
-    });
+  
+  return getClient().then(function (client) {
+    logger.trace('Saving player on cache DB', id, player);
+    return client.put(id + '.player.' + player.id, player);
   });
 };
 
