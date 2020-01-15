@@ -34,6 +34,14 @@ openshift_cluster_content:
       - game-room
       - unique-build
       - build
+    - name: jenkins-deploy
+      template: "{{ inventory_dir }}/../templates/game-room/jenkins-template.yml"
+      params: "{{ inventory_dir }}/../params/game-room/pipeline-cd"
+      namespace: "{{ non_prod_namespace }}"
+      tags:
+      - jenkins-deploy
+      - unique-build
+      - build
 - object: deploy-non-prod
   content:
     - name: service
