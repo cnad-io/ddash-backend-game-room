@@ -188,7 +188,7 @@ parameters:
     value: evict
   - name: TOTAL_CONTAINER_MEM
     value: '512'
-  - name: TOTAL_CONTAINER_MEM
+  - name: MIN_CONTAINER_MEM
     value: '128'
   - name: APPLICATION_USER
     required: true
