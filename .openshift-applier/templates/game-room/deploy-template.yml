@@ -175,10 +175,10 @@ parameters:
   value: 100m
 - name: MEMORY_REQUEST
   required: true
-  value: 100Mi
+  value: 50Mi
 - name: MEMORY_LIMIT
   required: true
-  value: 200Mi
+  value: 100Mi
 - name: APP_NAME
   required: true
   value: game-room
